@@ -19,6 +19,12 @@ from matplotlib.pyplot import figure, gcf, gca, plot, close, xlim, ylim, xlabel,
 from tqdm.auto import tqdm
 import pandas as pd
 
+import sys
+sys.path.insert(1, '/Users/anyak/Documents/Lab/SWC/astroTanya')
+sys.path.insert(1, '/Users/anyak/Documents/Lab/neuro.im-proc')
+import astrobject
+from astrobject import ascii, Table
+
 class TreeNode:
     max_branches=5 # safety switch to prevent infinite branching
     def __init__(self, v, rad=0.005, parent=None, tree=None):
@@ -83,7 +89,9 @@ def space_colonization(tree, sources, iterations, Dg, Di, Dk):
 #     pass
 
 def plot_tree(tree, root=None, sources=None, ax=None, view_init=None,
-               grid = True, show_sources =True, show_leaflets=True, params = None):
+               grid = True, show_sources =True, show_leaflets=True,
+                params = None, tree_color = 'navy', sources_color='salmon',
+                leaflets_color='maroon'):
     
     if ax is None:
         fig = plt.figure(dpi=300)
@@ -95,9 +103,9 @@ def plot_tree(tree, root=None, sources=None, ax=None, view_init=None,
         v = n.v
         for ch in n.children:
             vx = np.vstack([v, ch.v])
-            plot(vx[:,0], vx[:,1], vx[:, 2], 'k-', lw=1, color = 'navy', alpha=0.7)
+            plot(vx[:,0], vx[:,1], vx[:, 2], 'k-', lw=1, color = tree_color, alpha=0.7)
     if sources is not None and show_sources == True:
-        ax.plot(sources[:,0], sources[:,1], sources[:, 2], '.', color='salmon', ms=0.5)
+        ax.plot(sources[:,0], sources[:,1], sources[:, 2], '.', color=sources_color, ms=0.5)
     ax.axis('equal')
 
     if view_init is not None:
@@ -108,9 +116,9 @@ def plot_tree(tree, root=None, sources=None, ax=None, view_init=None,
         ax.axis('off')
     if show_leaflets == True:
         terminals = np.array([n.v for n in tree if len(n.children) == 0])
-        ax.plot(terminals[:, 0], terminals[:, 1], terminals[:, 2], 'o', color = 'maroon', ms=1.5)
+        ax.plot(terminals[:, 0], terminals[:, 1], terminals[:, 2], 'o', color = leaflets_color, ms=1.5)
     if params is not None:
-        ax.legend
+        ax.legend()
 
 def tree_to_graph(tree, optimize_graph=False):
     def get_node(node):
@@ -120,14 +128,19 @@ def tree_to_graph(tree, optimize_graph=False):
         v = node.v
         return tuple(v)
     root = [i for i in tree if i.parent == None][0]
-    graph = nx.DiGraph()
-    segms = [(get_node(node.parent), get_node(node)) for node in tree if node != root]
-    children = root.children
-    root_connect = [(get_node(root), get_node(child)) for child in children]
-    graph.add_node(get_node(root), root = get_node(root))
-    graph.add_nodes_from([get_node(node) for node in tree if node != root], root = get_node(root))
-    graph.add_edges_from(segms, root = get_node(root))
-    graph.add_edges_from(root_connect, root = get_node(root))
+
+    if len(root) == 1:
+        graph = nx.DiGraph()
+        segms = [(get_node(node.parent), get_node(node)) for node in tree if node != root]
+        children = root.children
+        root_connect = [(get_node(root), get_node(child)) for child in children]
+        graph.add_node(get_node(root), root = get_node(root))
+        graph.add_nodes_from([get_node(node) for node in tree if node != root], root = get_node(root))
+        graph.add_edges_from(segms, root = get_node(root))
+        graph.add_edges_from(root_connect, root = get_node(root))
+    else:
+        #multicellular sturture
+        pass
 
     return graph
 
@@ -303,7 +316,75 @@ class Space_colonization:
         
     def set_thickness(self, sigma):
         tips = [n for n in self.tree if n.children == 0]
-        for n in self.tree:
+    
+        def find_root(node, path = []):
+            parent = node.parent
 
-def content(SCA):
-    return SCA.__dict__
+            if not path:
+                path.append(node)
+
+            if parent != None:
+                path.append(parent)
+                return find_root(parent, path=path)
+            else:
+                return path
+        
+        for t in tips:
+            path = find_root(n)
+
+            for n, tree_node in enumerate(path, 1):
+                new_R = 1 - np.exp(-sigma*n)
+                tree_node.radius = new_R
+
+def swc_save(data, cell_type, filename, ratio=None, sigmas_rad = False, sigmas_vals = None):
+    astro = data
+    lines = []
+    keys = ['#index', 'type ', 'X ', 'Y ', 'Z ', 'radius ', 'parent', '\n']
+    soma = 1
+    radius = 0.001
+
+    data = Table()
+    # ratio = ratio if ratio else self.ratio
+
+    X = []
+    Y = []
+    Z = []
+    POS = []
+    PAR = []
+
+    for r in astro:
+        for n in r.items():
+            x, y, z = n[0]
+            X.append(x)
+            Y.append(y)
+            Z.append(z)
+            pos, par = n[1]
+            POS.append(pos)
+            PAR.append(par)
+
+    ntype = np.full(len(POS), cell_type)
+    ntype[0] = 1
+    
+    if sigmas_rad == True:
+        
+        if sigmas_vals == None:
+            print('Add sigmas values')
+        soma_rad = max(np.array(list(sigmas_vals))[:, 1]) * 3
+        radius = [soma_rad]
+        
+        for z in list(zip(X, Y, Z))[1:]:
+            #  половина сигмы --- радиус
+            radius.append((sigmas_vals[z])/2)
+        radius = np.array(radius)
+
+    data['#index'] = np.array(POS)
+    data['type'] = ntype
+    data['X'] = np.array(X) * ratio[0]
+    data['Y'] = np.array(Y) * ratio[1]
+    data['Z'] = np.array(Z) * ratio[2]
+    data['radius'] = radius
+    data['parent'] = np.array(PAR)
+
+    data.write(filename, format='ascii', overwrite=True)
+# def content(SCA):
+#     return SCA.__dict__
