@@ -6,6 +6,7 @@ from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 import mpl_toolkits.mplot3d as a3
 import SCA
 import copy
+from glob import glob
 
 from treem import Morph, SWC
 
@@ -31,6 +32,11 @@ from neuron_morphology.features.branching.bifurcations import num_outer_bifurcat
 from neuron_morphology.features.default_features import total_length, total_volume, total_surface_area
 import neuron_morphology.feature_extractor.feature_writer as fw
 
+def get_files(path, format = '.swc'):
+    files = []
+    for f in glob(path + '/*' + format):
+        files.append(f)
+    return files
 
 def define_domain(tree, _plot_=None, plot_save = False, filename = None, dpi=300):
     '''
@@ -229,8 +235,8 @@ class SWC_analyse:
             plt.savefig(f'{self.name}_persistence_image.png', dpi=300)
 
     def morphofeatures(self, features=None, save=True, show_results=False, special_id = None):
-        heavy_path = self.save_path + '/morphofeatures_' + self.name + '.h5'
-        table_path = self.save_path + '/morphofeatures_' + self.name + '.csv'
+        heavy_path = self.savepath + '/morphofeatures_' + self.name + '.h5'
+        table_path = self.savepath + '/morphofeatures_' + self.name + '.csv'
         swc = swcio.read_swc(self.path)
         nodes = prepare_neuron_tree(swc)
         data = Data(Morphology(nodes, node_id_cb=lambda node: node['id'], parent_id_cb=lambda node: node['parent']))
@@ -260,17 +266,17 @@ class SWC_analyse:
         if show_results == True and save == False:
             unnest(results)
     
-    def sholl(self, save = False):
+    def sholl(self, step = 1, save = False):
         sholl = {}
         morphology = Morph(self.path)
-        radx, crox = Sholl(morphology)
+        radx, crox = Sholl(morphology, step=step)
         sholl['radius'] = radx
         sholl['cross'] = crox
 
         if save == True:
-            file = open(self.savepath+f'/{self.name}_sholl.txt')
+            file = open(self.savepath+f'/{self.name}_sholl.txt', 'w')
             file.write('radius cross\n')
             for i in zip(radx, crox):
-                file.write('{} {}\n'format(i[0], i[1]))
+                file.write('{} {}\n'.format(i[0], i[1]))
             file.close()
         return sholl

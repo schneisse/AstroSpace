@@ -10,46 +10,31 @@ class PointCloud:
     
     def Cube(self):
         if self.cloud is None:
-            self.cloud = self.radius*(np.random.rand(self.Npoints,3) - 0.5)
+            cloud = self.radius*(np.random.rand(self.Npoints,3) - 0.5)
+            self.cloud = np.array([np.array(i) + np.array(self.center) for i in cloud])
             return self.cloud
     
-    def Sphere(self, non_uniform = False, uni=2):
+    def Sphere(self):
 
         def inner_points(R, center, uni=1):
-            if uni == 1:
+            c = True
+            while c==True:
+                h, k, l = center
+                x = np.random.uniform(h-R, h+R)
+                y = np.random.uniform(k-R, k+R)
+                z = np.random.uniform(l-R, l+R)
+                
+                if (x-h)**2 + (y-k)**2 + (z-l)**2 <= R**2:
+                    c = False
+                    return np.array([x, y, z])
 
-                while True:
-                    x = np.random.random()*2 - 1
-                    y = np.random.random()*2 - 1
-                    z = np.random.random()*2 - 1
-                    h, k, l = center
-                    
-                    if (x-h)**2 + (y-k)**2 + (z-l)**2 <= R**2:
-                        return np.array([x, y, z])
-            else:
-                while True:
-                    x = np.random.exponential()*uni - 1
-                    y = np.random.exponential()*uni - 1
-                    z = np.random.exponential()*uni - 1
-                    h, k, l = center
-                    
-                    if (x-h)**2 + (y-k)**2 + (z-l)**2 <= R**2:
-                        return np.array([x, y, z])
-
-        if self.cloud is None and non_uniform==False:
-            cloud = []
-            for n in range(self.Npoints):
-                cloud.append(inner_points(self.radius, self.center))
-            self.cloud = np.array(cloud)
-            return self.cloud 
-           
-        elif self.cloud is None and non_uniform==True:
-            cloud = []
-            for n in range(self.Npoints):
-                cloud.append(inner_points(self.radius, self.center, uni=uni))
-            self.cloud = np.array(cloud)
-            return self.cloud
+        cloud = []
+        for n in range(self.Npoints):
+            cloud.append(inner_points(self.radius, self.center))
     
+        self.cloud = np.array(cloud)
+        return self.cloud 
+           
     def Sphere_surface(self):
         def sample_spherical(npoints, ndim=3):
             vec = np.random.randn(ndim, npoints)
@@ -58,7 +43,8 @@ class PointCloud:
         
         xi, yi, zi = sample_spherical(self.Npoints)
         r = self.radius
-        self.cloud = np.array(list((zip(r*xi, r*yi, r*zi))))
+        cloud = np.array(list((zip(r*xi, r*yi, r*zi))))
+        self.cloud = np.array([np.array(i) + np.array(self.center) for i in cloud])
         return self.cloud
 
     def CustomCloud(self, my_cloud):

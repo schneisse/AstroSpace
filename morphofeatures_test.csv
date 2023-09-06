@@ -1,0 +1,2 @@
+reconstruction_id,total_volume,total_surface_area,total_length,num_outer_bifurcations,max_branch_order,num_tips,num_branches,num_nodes
+test,0.2524250840381113,12.039717935127003,48.789990799606485,186,20,376,751,4881
