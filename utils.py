@@ -7,6 +7,7 @@ import mpl_toolkits.mplot3d as a3
 import SCA
 import copy
 from glob import glob
+import pandas as pd
 
 from treem import Morph, SWC
 
@@ -31,6 +32,7 @@ from neuron_morphology.features.intrinsic import num_branches, num_tips, num_nod
 from neuron_morphology.features.branching.bifurcations import num_outer_bifurcations
 from neuron_morphology.features.default_features import total_length, total_volume, total_surface_area
 import neuron_morphology.feature_extractor.feature_writer as fw
+
 
 def get_files(path, format = '.swc'):
     files = []
@@ -209,6 +211,27 @@ def Sholl(morph, step=1):
     
     return radx, crox
 
+# SWC_COLUMNS = ('id', 'type', 'x', 'y', 'z', 'radius', 'parent',)
+# COLUMN_CASTS = {
+#     'id': int,
+#     'parent': int,
+#     'type': int
+# }
+
+# def apply_casts(df, casts):
+
+#     for key, typ in casts.items():
+#         df[key] = df[key].astype(typ)
+
+
+# def read_swc(path, columns=SWC_COLUMNS, sep=' ', casts=COLUMN_CASTS):
+
+#     """ Read an swc file into a pandas dataframe
+#     """
+
+#     df = pd.read_csv(path, names=columns, comment='#', sep=sep)
+#     apply_casts(df, casts)
+#     return df
 class SWC_analyse:
     def __init__(self, input_path, save_path):
         self.path = input_path

@@ -1,2 +1,2 @@
 reconstruction_id,total_volume,total_surface_area,total_length,num_outer_bifurcations,max_branch_order,num_tips,num_branches,num_nodes
-test,0.7853972701884767,31.415890807538997,99.99988627310142,120,13,438,875,1252
+tree3d-wsoma,85044.01523052815,238812.03954246192,89232.32543575703,5668,57,8543,17073,61788

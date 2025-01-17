@@ -23,8 +23,9 @@ from scipy import spatial
 import sys
 sys.path.insert(1, '/Users/anyak/Documents/Lab/SWC/astroTanya')
 sys.path.insert(1, '/Users/anyak/Documents/Lab/neuro.im-proc')
-import astrobject
-from astrobject import ascii, Table
+
+from astro_graph import AstroGraph as AG
+from astropy.table import Table
 
 class TreeNode:
     max_branches=5 # safety switch to prevent infinite branching
@@ -449,7 +450,7 @@ def swc_save(graph, filename, center, Dg =0.01, cell_type=5, ratio=None, sigmas_
     max_dist = np.max([spatial.distance.euclidean(root, t) for t in tips])
     radius = 0.05
 
-    astro = astrobject.AG(graph).swc(center=tuple(center))
+    astro = AG(graph).swc(center=tuple(center))
     data = Table()
     # ratio = ratio if ratio else self.ratio
 
